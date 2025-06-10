@@ -453,7 +453,7 @@
         <div class="controls">
             <button class="btn" id="newGameBtn" onclick="startNewGame()">New Game</button>
             <button class="btn" id="skipWordBtn" onclick="skipCurrentWord()">Skip Word</button>
-            <button class="btn" id="refreshKeyboardBtn" onclick="setupKeyboard()" style="background: #e74c3c;">Fix Keyboard</button>
+            <button class="btn" id="refreshKeyboardBtn" onclick="manualKeyboardFix()" style="background: #e74c3c;">Fix Keyboard</button>
         </div>
     </div>
 
@@ -551,6 +551,16 @@
                 debugText.innerHTML += '<br>' + message;
             }
         }
+        
+        // Start debug logging immediately
+        let gameInitialized = false;
+        
+        // Try to show debug info as soon as possible
+        setTimeout(() => {
+            debugLog('Page script loaded - checking mobile compatibility...');
+            debugLog('Document ready state: ' + document.readyState);
+            debugLog('User agent: ' + navigator.userAgent);
+        }, 50);
 
         // Check if on mobile device
         function isMobile() {
@@ -559,10 +569,17 @@
 
         // Initialize the game
         function initGame() {
+            if (gameInitialized) {
+                debugLog('Game already initialized, skipping...');
+                return;
+            }
+            
             debugLog('Initializing game...');
             debugLog('User agent: ' + navigator.userAgent);
             debugLog('Is mobile: ' + isMobile());
+            debugLog('DOM ready state: ' + document.readyState);
             
+            gameInitialized = true;
             loadStats();
             
             // Ensure DOM is ready before setting up keyboard
@@ -637,6 +654,23 @@
                 
                 boardElement.appendChild(rowElement);
                 gameBoard.push(rowData);
+            }
+        }
+
+        // Manual keyboard fix function
+        function manualKeyboardFix() {
+            debugLog('Manual keyboard fix triggered...');
+            debugLog('Current gameInitialized state: ' + gameInitialized);
+            
+            // Force setup regardless of initialization state
+            setupKeyboard();
+            
+            // If game wasn't properly initialized, complete the setup
+            if (!gameInitialized) {
+                debugLog('Completing missing game initialization...');
+                setupEventListeners();
+                startNewGame();
+                gameInitialized = true;
             }
         }
 
@@ -940,8 +974,13 @@
             }
         }
 
-        // Initialize the game when the page loads
+        // Initialize the game when the page loads - multiple event listeners for mobile reliability
         window.addEventListener('load', initGame);
+        window.addEventListener('DOMContentLoaded', initGame);
+        document.addEventListener('DOMContentLoaded', initGame);
+        
+        // Fallback initialization after a delay
+        setTimeout(initGame, 500);
     </script>
 </body>
 </html>
