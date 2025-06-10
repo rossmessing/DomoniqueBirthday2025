@@ -230,20 +230,7 @@
             color: #3498db;
         }
 
-        .mobile-type-btn {
-            text-align: center;
-            margin: 15px 0;
-        }
 
-        .mobile-type-btn .btn {
-            background: #28a745;
-            font-size: 1.1rem;
-            padding: 15px 30px;
-        }
-
-        .mobile-type-btn .btn:hover {
-            background: #218838;
-        }
 
         .controls {
             display: flex;
@@ -323,15 +310,18 @@
             }
             
             .key {
-                padding: 15px 8px;
-                font-size: 0.9rem;
-                min-width: 40px;
-                min-height: 44px;
+                padding: 16px 10px;
+                font-size: 1rem;
+                min-width: 42px;
+                min-height: 48px;
+                border-radius: 6px;
+                font-weight: 700;
             }
             
             .key.wide {
-                padding: 15px 24px;
-                font-size: 0.9rem;
+                padding: 16px 26px;
+                font-size: 0.95rem;
+                min-width: 60px;
             }
             
             .header h1 {
@@ -343,35 +333,46 @@
             }
             
             .keyboard-row {
-                gap: 4px;
+                gap: 5px;
+            }
+            
+            .keyboard {
+                gap: 10px;
             }
         }
         
         @media (max-width: 480px) {
             .letter-cell {
-                width: 40px;
-                height: 40px;
+                width: 38px;
+                height: 38px;
                 font-size: 1.1rem;
             }
             
             .key {
-                padding: 12px 6px;
-                font-size: 0.8rem;
-                min-width: 35px;
-                min-height: 44px;
+                padding: 14px 8px;
+                font-size: 0.9rem;
+                min-width: 38px;
+                min-height: 46px;
+                border-radius: 6px;
+                font-weight: 700;
             }
             
             .key.wide {
-                padding: 12px 20px;
-                font-size: 0.8rem;
+                padding: 14px 22px;
+                font-size: 0.85rem;
+                min-width: 55px;
             }
             
             .word-row {
-                gap: 4px;
+                gap: 3px;
             }
             
             .keyboard-row {
-                gap: 3px;
+                gap: 4px;
+            }
+            
+            .keyboard {
+                gap: 8px;
             }
         }
         
@@ -410,15 +411,7 @@
             <!-- Game grid will be generated here -->
         </div>
 
-        <!-- Hidden input to trigger iOS keyboard -->
-        <input type="text" id="hiddenInput" style="position: absolute; left: -9999px; opacity: 0; pointer-events: none;" autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false" inputmode="text">
-
         <div class="message" id="message"></div>
-
-        <!-- Tap to type button for mobile -->
-        <div class="mobile-type-btn" id="mobileTypeBtn" style="display: none;">
-            <button class="btn" onclick="activateTyping()">📱 Tap to Type</button>
-        </div>
 
         <div class="keyboard" id="keyboard">
             <!-- Keyboard will be generated here -->
@@ -514,26 +507,12 @@
             });
         }
 
-        // Check if device is mobile
-        function isMobileDevice() {
-            return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-        }
-
-        // Activate typing for mobile devices
-        function activateTyping() {
-            const hiddenInput = document.getElementById('hiddenInput');
-            hiddenInput.focus();
-            document.getElementById('mobileTypeBtn').style.display = 'none';
-            showMessage("Start typing! Use the keyboard that appears.", "info");
-        }
-
         // Initialize the game
         function initGame() {
             loadStats();
             startNewGame();
             setupKeyboard();
             setupEventListeners();
-            setupMobileSupport();
         }
 
         // Start a new game
@@ -544,12 +523,6 @@
             // Reset completed words
             completedWords = [];
             updateCompletedWordsDisplay();
-            
-            // Reset mobile typing state
-            if (isMobileDevice()) {
-                const hiddenInput = document.getElementById('hiddenInput');
-                hiddenInput.blur();
-            }
             
             currentWordIndex = 0;
             loadNextWord();
@@ -581,11 +554,6 @@
 
             createGameBoard();
             showMessage(`Guess the ${currentWord.length}-letter word!`, "info");
-            
-            // Show mobile type button for new word on mobile devices
-            if (isMobileDevice()) {
-                document.getElementById('mobileTypeBtn').style.display = 'block';
-            }
         }
 
         // Create the game board based on current word length
@@ -637,24 +605,34 @@
                         keyElement.classList.add('wide');
                     }
 
-                    // Add both click and touch events for better mobile support
-                    let touchHandled = false;
+                    // Add enhanced touch events for iPhone compatibility
+                    let touchStarted = false;
                     
                     keyElement.addEventListener('touchstart', (e) => {
-                        touchHandled = true;
+                        e.preventDefault();
+                        touchStarted = true;
                         keyElement.style.transform = 'scale(0.95)';
-                    });
+                        keyElement.style.backgroundColor = '#999';
+                    }, { passive: false });
                     
                     keyElement.addEventListener('touchend', (e) => {
                         e.preventDefault();
+                        if (touchStarted) {
+                            keyElement.style.transform = 'scale(1)';
+                            keyElement.style.backgroundColor = '';
+                            handleKeyPress(key);
+                            touchStarted = false;
+                        }
+                    }, { passive: false });
+                    
+                    keyElement.addEventListener('touchcancel', (e) => {
                         keyElement.style.transform = 'scale(1)';
-                        handleKeyPress(key);
-                        // Reset flag after a delay to allow click events on non-touch devices
-                        setTimeout(() => { touchHandled = false; }, 300);
+                        keyElement.style.backgroundColor = '';
+                        touchStarted = false;
                     });
                     
                     keyElement.addEventListener('click', (e) => {
-                        if (!touchHandled) {
+                        if (!touchStarted) {
                             handleKeyPress(key);
                         }
                     });
@@ -677,56 +655,7 @@
             });
         }
 
-        // Setup mobile support
-        function setupMobileSupport() {
-            if (isMobileDevice()) {
-                document.getElementById('mobileTypeBtn').style.display = 'block';
-                
-                const hiddenInput = document.getElementById('hiddenInput');
-                
-                // Handle input events from hidden input
-                hiddenInput.addEventListener('input', (e) => {
-                    const value = e.target.value.toUpperCase();
-                    if (value.length > 0) {
-                        const lastChar = value[value.length - 1];
-                        if (lastChar.match(/[A-Z]/)) {
-                            handleKeyPress(lastChar);
-                        }
-                        // Clear the input to allow continuous typing
-                        e.target.value = '';
-                    }
-                });
 
-                // Handle special keys from hidden input
-                hiddenInput.addEventListener('keydown', (e) => {
-                    if (gameOver) return;
-                    
-                    if (e.key === 'Enter') {
-                        e.preventDefault();
-                        handleKeyPress('ENTER');
-                    } else if (e.key === 'Backspace') {
-                        e.preventDefault();
-                        handleKeyPress('BACKSPACE');
-                    }
-                });
-
-                // Keep input focused during gameplay
-                hiddenInput.addEventListener('blur', () => {
-                    if (!gameOver && document.getElementById('mobileTypeBtn').style.display === 'none') {
-                        setTimeout(() => hiddenInput.focus(), 100);
-                    }
-                });
-
-                // Allow tapping on game board to activate typing
-                document.getElementById('gameBoard').addEventListener('click', (e) => {
-                    if (document.getElementById('mobileTypeBtn').style.display !== 'none') {
-                        activateTyping();
-                    } else {
-                        hiddenInput.focus();
-                    }
-                });
-            }
-        }
 
         // Setup event listeners
         function setupEventListeners() {
@@ -744,12 +673,22 @@
                 }
             });
             
-            // Prevent page scroll when game is active
+            // Prevent page scroll and enhance touch handling for iPhone
             document.addEventListener('touchmove', (e) => {
-                if (e.target.closest('.game-container') || e.target.closest('.game-info')) {
+                if (e.target.closest('.keyboard') || e.target.closest('.key')) {
                     e.preventDefault();
                 }
             }, { passive: false });
+            
+            // Prevent double-tap zoom on the game area
+            let lastTouchEnd = 0;
+            document.addEventListener('touchend', (e) => {
+                const now = (new Date()).getTime();
+                if (now - lastTouchEnd <= 300) {
+                    e.preventDefault();
+                }
+                lastTouchEnd = now;
+            }, false);
         }
 
         // Handle key presses
@@ -914,12 +853,6 @@
                 showMessage(`The word was: ${currentWord}. Moving to next word...`, "info");
                 stats.totalAttempts += maxAttempts;
                 currentWordIndex++;
-                
-                // Reset mobile typing state
-                if (isMobileDevice()) {
-                    const hiddenInput = document.getElementById('hiddenInput');
-                    hiddenInput.blur();
-                }
                 
                 setTimeout(() => {
                     loadNextWord();
