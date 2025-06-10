@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Happy Birthday</title>
     <style>
         * {
@@ -19,6 +19,13 @@
             flex-direction: column;
             align-items: center;
             color: #333;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            -khtml-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            overflow-x: hidden;
         }
 
         .header {
@@ -170,10 +177,17 @@
             cursor: pointer;
             transition: background-color 0.2s ease;
             min-width: 35px;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
         }
 
         .key:hover {
             background: #bbb;
+        }
+        
+        .key:active {
+            transform: scale(0.95);
+            background: #999;
         }
 
         .key.wide {
@@ -233,6 +247,9 @@
             font-weight: 600;
             cursor: pointer;
             transition: background-color 0.3s ease;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+            min-height: 44px;
         }
 
         .btn:hover {
@@ -279,20 +296,78 @@
         }
 
         @media (max-width: 600px) {
+            .game-container {
+                padding: 20px;
+                width: 95%;
+            }
+            
             .letter-cell {
-                width: 40px;
-                height: 40px;
-                font-size: 1.2rem;
+                width: 45px;
+                height: 45px;
+                font-size: 1.3rem;
             }
             
             .key {
-                padding: 10px 6px;
-                font-size: 0.8rem;
-                min-width: 30px;
+                padding: 15px 8px;
+                font-size: 0.9rem;
+                min-width: 40px;
+                min-height: 44px;
+            }
+            
+            .key.wide {
+                padding: 15px 24px;
+                font-size: 0.9rem;
             }
             
             .header h1 {
                 font-size: 2rem;
+            }
+            
+            .word-row {
+                gap: 6px;
+            }
+            
+            .keyboard-row {
+                gap: 4px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .letter-cell {
+                width: 40px;
+                height: 40px;
+                font-size: 1.1rem;
+            }
+            
+            .key {
+                padding: 12px 6px;
+                font-size: 0.8rem;
+                min-width: 35px;
+                min-height: 44px;
+            }
+            
+            .key.wide {
+                padding: 12px 20px;
+                font-size: 0.8rem;
+            }
+            
+            .word-row {
+                gap: 4px;
+            }
+            
+            .keyboard-row {
+                gap: 3px;
+            }
+        }
+        
+        /* iOS Safari specific fixes */
+        @supports (-webkit-touch-callout: none) {
+            body {
+                padding-bottom: env(safe-area-inset-bottom);
+            }
+            
+            .game-container {
+                margin-bottom: 20px;
             }
         }
     </style>
@@ -514,7 +589,28 @@
                         keyElement.classList.add('wide');
                     }
 
-                    keyElement.addEventListener('click', () => handleKeyPress(key));
+                    // Add both click and touch events for better mobile support
+                    let touchHandled = false;
+                    
+                    keyElement.addEventListener('touchstart', (e) => {
+                        touchHandled = true;
+                        keyElement.style.transform = 'scale(0.95)';
+                    });
+                    
+                    keyElement.addEventListener('touchend', (e) => {
+                        e.preventDefault();
+                        keyElement.style.transform = 'scale(1)';
+                        handleKeyPress(key);
+                        // Reset flag after a delay to allow click events on non-touch devices
+                        setTimeout(() => { touchHandled = false; }, 300);
+                    });
+                    
+                    keyElement.addEventListener('click', (e) => {
+                        if (!touchHandled) {
+                            handleKeyPress(key);
+                        }
+                    });
+                    
                     rowElement.appendChild(keyElement);
                 });
 
@@ -548,6 +644,13 @@
                     handleKeyPress(key);
                 }
             });
+            
+            // Prevent page scroll when game is active
+            document.addEventListener('touchmove', (e) => {
+                if (e.target.closest('.game-container') || e.target.closest('.game-info')) {
+                    e.preventDefault();
+                }
+            }, { passive: false });
         }
 
         // Handle key presses
