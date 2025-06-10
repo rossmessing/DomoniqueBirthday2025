@@ -161,7 +161,7 @@
             gap: 8px;
             align-items: center;
             width: 100%;
-            max-width: 500px;
+            max-width: 450px;
             margin: 0 auto;
         }
 
@@ -440,12 +440,6 @@
 
         <div class="message" id="message"></div>
 
-        <!-- Debug info for mobile troubleshooting -->
-        <div id="debugInfo" style="background: #f0f0f0; padding: 10px; margin: 10px 0; border-radius: 5px; font-size: 0.8rem; display: none;">
-            <div>Debug Info:</div>
-            <div id="debugText">Loading...</div>
-        </div>
-
         <div class="keyboard" id="keyboard">
             <!-- Keyboard will be generated here -->
         </div>
@@ -453,7 +447,6 @@
         <div class="controls">
             <button class="btn" id="newGameBtn" onclick="startNewGame()">New Game</button>
             <button class="btn" id="skipWordBtn" onclick="skipCurrentWord()">Skip Word</button>
-            <button class="btn" id="refreshKeyboardBtn" onclick="setupKeyboard()" style="background: #e74c3c;">Fix Keyboard</button>
         </div>
     </div>
 
@@ -541,37 +534,15 @@
             });
         }
 
-        // Debug helper function
-        function debugLog(message) {
-            console.log(message);
-            const debugDiv = document.getElementById('debugInfo');
-            const debugText = document.getElementById('debugText');
-            if (debugDiv && debugText) {
-                debugDiv.style.display = 'block';
-                debugText.innerHTML += '<br>' + message;
-            }
-        }
-
-        // Check if on mobile device
-        function isMobile() {
-            return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-        }
-
         // Initialize the game
         function initGame() {
-            debugLog('Initializing game...');
-            debugLog('User agent: ' + navigator.userAgent);
-            debugLog('Is mobile: ' + isMobile());
-            
             loadStats();
             
             // Ensure DOM is ready before setting up keyboard
             setTimeout(() => {
-                debugLog('Setting up keyboard and event listeners...');
                 setupKeyboard();
                 setupEventListeners();
                 startNewGame();
-                debugLog('Game initialization complete!');
             }, 100);
         }
 
@@ -642,15 +613,13 @@
 
         // Setup the virtual keyboard
         function setupKeyboard() {
-            debugLog('Setting up keyboard...');
             const keyboardElement = document.getElementById('keyboard');
             
             if (!keyboardElement) {
-                debugLog('ERROR: Keyboard element not found!');
+                console.error('Keyboard element not found!');
                 return;
             }
             
-            debugLog('Keyboard element found, clearing and setting up...');
             keyboardElement.innerHTML = '';
             keyboardElement.style.display = 'flex'; // Ensure it's visible
 
@@ -663,14 +632,13 @@
             rows.forEach((row, rowIndex) => {
                 const rowElement = document.createElement('div');
                 rowElement.className = 'keyboard-row';
-                debugLog(`Creating row ${rowIndex} with ${row.length} keys`);
 
                 row.forEach(key => {
                     const keyElement = document.createElement('button');
                     keyElement.className = 'key';
                     keyElement.textContent = key === 'BACKSPACE' ? '⌫' : key;
                     keyElement.setAttribute('data-key', key);
-                    keyElement.type = 'button'; // Explicitly set button type
+                    keyElement.type = 'button';
                     
                     if (key === 'ENTER' || key === 'BACKSPACE') {
                         keyElement.classList.add('wide');
@@ -718,8 +686,6 @@
 
                 keyboardElement.appendChild(rowElement);
             });
-            
-            debugLog(`Keyboard setup complete! Created ${rows.length} rows with ${rows.reduce((sum, row) => sum + row.length, 0)} total keys.`);
         }
 
         // Reset keyboard state
