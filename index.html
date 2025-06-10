@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Happy Birthday</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f5f5;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: #333;
+        }
+
+        .header {
+            text-align: center;
+            margin: 20px 0;
+            color: #333;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .game-info {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 15px 25px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .word-progress {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #4a4a4a;
+            margin-bottom: 15px;
+        }
+
+        .completed-words {
+            border-top: 1px solid #ddd;
+            padding-top: 15px;
+        }
+
+        .completed-words-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        .completed-words-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            min-height: 30px;
+            align-items: center;
+        }
+
+        .completed-word {
+            background: #6aaa64;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 15px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .completed-words:empty .completed-words-title {
+            display: none;
+        }
+
+        .game-container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            max-width: 600px;
+            width: 90%;
+        }
+
+        .game-board {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .word-row {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .letter-cell {
+            width: 50px;
+            height: 50px;
+            border: 2px solid #d3d6da;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            background: white;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .letter-cell.filled {
+            border-color: #878a8c;
+            animation: pop 0.1s ease-in-out;
+        }
+
+        .letter-cell.correct {
+            background: #6aaa64;
+            color: white;
+            border-color: #6aaa64;
+        }
+
+        .letter-cell.present {
+            background: #c9b458;
+            color: white;
+            border-color: #c9b458;
+        }
+
+        .letter-cell.absent {
+            background: #787c7e;
+            color: white;
+            border-color: #787c7e;
+        }
+
+        @keyframes pop {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        .keyboard {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .keyboard-row {
+            display: flex;
+            gap: 6px;
+        }
+
+        .key {
+            background: #d3d6da;
+            border: none;
+            border-radius: 4px;
+            padding: 12px 8px;
+            font-size: 0.9rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            min-width: 35px;
+        }
+
+        .key:hover {
+            background: #bbb;
+        }
+
+        .key.wide {
+            padding: 12px 20px;
+            font-size: 0.8rem;
+        }
+
+        .key.correct {
+            background: #6aaa64;
+            color: white;
+        }
+
+        .key.present {
+            background: #c9b458;
+            color: white;
+        }
+
+        .key.absent {
+            background: #787c7e;
+            color: white;
+        }
+
+        .message {
+            text-align: center;
+            margin: 20px 0;
+            font-size: 1.1rem;
+            font-weight: 600;
+            min-height: 25px;
+        }
+
+        .message.success {
+            color: #6aaa64;
+        }
+
+        .message.error {
+            color: #e74c3c;
+        }
+
+        .message.info {
+            color: #3498db;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .btn:hover {
+            background: #5a6fd8;
+        }
+
+        .btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .stats {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 15px;
+            padding: 20px;
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .stats h3 {
+            margin-bottom: 15px;
+            color: #4a4a4a;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 15px;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        @media (max-width: 600px) {
+            .letter-cell {
+                width: 40px;
+                height: 40px;
+                font-size: 1.2rem;
+            }
+            
+            .key {
+                padding: 10px 6px;
+                font-size: 0.8rem;
+                min-width: 30px;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🎂 Happy Birthday</h1>
+        <p>Guess words of varying lengths in sequence!</p>
+    </div>
+
+    <div class="game-info">
+        <div class="word-progress">
+            <span id="currentWordInfo">Word 1 of 5 | Length: 5 letters</span>
+        </div>
+        <div class="completed-words">
+            <div class="completed-words-title">Completed Words:</div>
+            <div class="completed-words-list" id="completedWordsList">
+                <!-- Completed words will appear here -->
+            </div>
+        </div>
+    </div>
+
+    <div class="game-container">
+        <div class="game-board" id="gameBoard">
+            <!-- Game grid will be generated here -->
+        </div>
+
+        <div class="message" id="message"></div>
+
+        <div class="keyboard" id="keyboard">
+            <!-- Keyboard will be generated here -->
+        </div>
+
+        <div class="controls">
+            <button class="btn" id="newGameBtn" onclick="startNewGame()">New Game</button>
+            <button class="btn" id="skipWordBtn" onclick="skipCurrentWord()">Skip Word</button>
+        </div>
+    </div>
+
+    <div class="stats">
+        <h3>📊 Game Statistics</h3>
+        <div class="stats-grid">
+            <div class="stat-item">
+                <div class="stat-number" id="wordsCompleted">0</div>
+                <div class="stat-label">Words Completed</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number" id="totalAttempts">0</div>
+                <div class="stat-label">Total Attempts</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number" id="averageAttempts">0</div>
+                <div class="stat-label">Avg Attempts</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number" id="winRate">0%</div>
+                <div class="stat-label">Win Rate</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Word list in specific order
+        const WORD_LIST = ["dear", "domonique","you", "are", "my", "heart"];
+
+        // Game state
+        let currentWordList = [];
+        let currentWordIndex = 0;
+        let currentWord = "";
+        let currentRow = 0;
+        let currentCol = 0;
+        let gameOver = false;
+        let maxAttempts = 6;
+        let gameBoard = [];
+        let keyboardState = {};
+        let completedWords = [];
+        
+        // Statistics
+        let stats = {
+            wordsCompleted: 0,
+            totalAttempts: 0,
+            gamesWon: 0,
+            gamesPlayed: 0
+        };
+
+        // Load stats from localStorage
+        function loadStats() {
+            const savedStats = localStorage.getItem('wordleStats');
+            if (savedStats) {
+                stats = JSON.parse(savedStats);
+                updateStatsDisplay();
+            }
+        }
+
+        // Save stats to localStorage
+        function saveStats() {
+            localStorage.setItem('wordleStats', JSON.stringify(stats));
+            updateStatsDisplay();
+        }
+
+        // Update stats display
+        function updateStatsDisplay() {
+            document.getElementById('wordsCompleted').textContent = stats.wordsCompleted;
+            document.getElementById('totalAttempts').textContent = stats.totalAttempts;
+            document.getElementById('averageAttempts').textContent = 
+                stats.wordsCompleted > 0 ? (stats.totalAttempts / stats.wordsCompleted).toFixed(1) : '0';
+            document.getElementById('winRate').textContent = 
+                stats.gamesPlayed > 0 ? Math.round((stats.gamesWon / stats.gamesPlayed) * 100) + '%' : '0%';
+        }
+
+        // Update completed words display
+        function updateCompletedWordsDisplay() {
+            const completedWordsList = document.getElementById('completedWordsList');
+            completedWordsList.innerHTML = '';
+            
+            completedWords.forEach(word => {
+                const wordElement = document.createElement('div');
+                wordElement.className = 'completed-word';
+                wordElement.textContent = word;
+                completedWordsList.appendChild(wordElement);
+            });
+        }
+
+        // Initialize the game
+        function initGame() {
+            loadStats();
+            startNewGame();
+            setupKeyboard();
+            setupEventListeners();
+        }
+
+        // Start a new game
+        function startNewGame() {
+            // Use the words in their specific order
+            currentWordList = [...WORD_LIST];
+            
+            // Reset completed words
+            completedWords = [];
+            updateCompletedWordsDisplay();
+            
+            currentWordIndex = 0;
+            loadNextWord();
+            resetKeyboardState();
+            stats.gamesPlayed++;
+        }
+
+        // Load the next word in the sequence
+        function loadNextWord() {
+            if (currentWordIndex >= currentWordList.length) {
+                showMessage("🎉 Congratulations! You've completed all words!", "success");
+                stats.gamesWon++;
+                saveStats();
+                return;
+            }
+
+            currentWord = currentWordList[currentWordIndex].toUpperCase();
+            currentRow = 0;
+            currentCol = 0;
+            gameOver = false;
+            maxAttempts = Math.max(6, currentWord.length);
+
+            // Reset keyboard colors for the new word
+            resetKeyboardState();
+
+            // Update game info
+            document.getElementById('currentWordInfo').textContent = 
+                `Word ${currentWordIndex + 1} of ${currentWordList.length} | Length: ${currentWord.length} letters`;
+
+            createGameBoard();
+            showMessage(`Guess the ${currentWord.length}-letter word!`, "info");
+        }
+
+        // Create the game board based on current word length
+        function createGameBoard() {
+            const boardElement = document.getElementById('gameBoard');
+            boardElement.innerHTML = '';
+            gameBoard = [];
+
+            for (let row = 0; row < maxAttempts; row++) {
+                const rowElement = document.createElement('div');
+                rowElement.className = 'word-row';
+                
+                const rowData = [];
+                for (let col = 0; col < currentWord.length; col++) {
+                    const cellElement = document.createElement('div');
+                    cellElement.className = 'letter-cell';
+                    cellElement.id = `cell-${row}-${col}`;
+                    rowElement.appendChild(cellElement);
+                    rowData.push({ letter: '', state: '' });
+                }
+                
+                boardElement.appendChild(rowElement);
+                gameBoard.push(rowData);
+            }
+        }
+
+        // Setup the virtual keyboard
+        function setupKeyboard() {
+            const keyboardElement = document.getElementById('keyboard');
+            keyboardElement.innerHTML = '';
+
+            const rows = [
+                ['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P'],
+                ['A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L'],
+                ['ENTER', 'Z', 'X', 'C', 'V', 'B', 'N', 'M', 'BACKSPACE']
+            ];
+
+            rows.forEach(row => {
+                const rowElement = document.createElement('div');
+                rowElement.className = 'keyboard-row';
+
+                row.forEach(key => {
+                    const keyElement = document.createElement('button');
+                    keyElement.className = 'key';
+                    keyElement.textContent = key === 'BACKSPACE' ? '⌫' : key;
+                    keyElement.setAttribute('data-key', key);
+                    
+                    if (key === 'ENTER' || key === 'BACKSPACE') {
+                        keyElement.classList.add('wide');
+                    }
+
+                    keyElement.addEventListener('click', () => handleKeyPress(key));
+                    rowElement.appendChild(keyElement);
+                });
+
+                keyboardElement.appendChild(rowElement);
+            });
+        }
+
+        // Reset keyboard state
+        function resetKeyboardState() {
+            keyboardState = {};
+            document.querySelectorAll('.key').forEach(key => {
+                key.className = 'key';
+                if (key.textContent === 'ENTER' || key.textContent === '⌫') {
+                    key.classList.add('wide');
+                }
+            });
+        }
+
+        // Setup event listeners
+        function setupEventListeners() {
+            document.addEventListener('keydown', (e) => {
+                if (gameOver) return;
+
+                const key = e.key.toUpperCase();
+                
+                if (key === 'ENTER') {
+                    handleKeyPress('ENTER');
+                } else if (key === 'BACKSPACE') {
+                    handleKeyPress('BACKSPACE');
+                } else if (key.match(/[A-Z]/) && key.length === 1) {
+                    handleKeyPress(key);
+                }
+            });
+        }
+
+        // Handle key presses
+        function handleKeyPress(key) {
+            if (gameOver) return;
+
+            if (key === 'ENTER') {
+                submitGuess();
+            } else if (key === 'BACKSPACE') {
+                deleteLetter();
+            } else if (key.match(/[A-Z]/) && currentCol < currentWord.length) {
+                addLetter(key);
+            }
+        }
+
+        // Add a letter to the current position
+        function addLetter(letter) {
+            if (currentCol < currentWord.length) {
+                gameBoard[currentRow][currentCol].letter = letter;
+                const cellElement = document.getElementById(`cell-${currentRow}-${currentCol}`);
+                cellElement.textContent = letter;
+                cellElement.classList.add('filled');
+                currentCol++;
+            }
+        }
+
+        // Delete the last letter
+        function deleteLetter() {
+            if (currentCol > 0) {
+                currentCol--;
+                gameBoard[currentRow][currentCol].letter = '';
+                const cellElement = document.getElementById(`cell-${currentRow}-${currentCol}`);
+                cellElement.textContent = '';
+                cellElement.classList.remove('filled');
+            }
+        }
+
+        // Submit the current guess
+        function submitGuess() {
+            if (currentCol !== currentWord.length) {
+                showMessage("Please complete the word!", "error");
+                return;
+            }
+
+            const guess = gameBoard[currentRow].map(cell => cell.letter).join('');
+            const result = checkGuess(guess);
+
+            // Animate the reveal
+            animateRowReveal(currentRow, result);
+
+            // Update keyboard
+            updateKeyboard(guess, result);
+
+            // Check if won
+            if (guess === currentWord) {
+                setTimeout(() => {
+                    showMessage("🎉 Correct! Moving to next word...", "success");
+                    stats.wordsCompleted++;
+                    stats.totalAttempts += currentRow + 1;
+                    
+                    // Add completed word to the list
+                    completedWords.push(currentWord.toLowerCase());
+                    updateCompletedWordsDisplay();
+                    
+                    currentWordIndex++;
+                    
+                    setTimeout(() => {
+                        loadNextWord();
+                    }, 2000);
+                }, 1500);
+            } else {
+                currentRow++;
+                currentCol = 0;
+
+                if (currentRow >= maxAttempts) {
+                    gameOver = true;
+                    showMessage(`Game Over! The word was: ${currentWord}`, "error");
+                    stats.totalAttempts += maxAttempts;
+                }
+            }
+
+            saveStats();
+        }
+
+        // Check the guess against the current word
+        function checkGuess(guess) {
+            const result = new Array(guess.length).fill('absent');
+            const wordLetters = currentWord.split('');
+            const guessLetters = guess.split('');
+
+            // First pass: mark correct positions
+            for (let i = 0; i < guess.length; i++) {
+                if (guessLetters[i] === wordLetters[i]) {
+                    result[i] = 'correct';
+                    wordLetters[i] = null; // Mark as used
+                    guessLetters[i] = null; // Mark as processed
+                }
+            }
+
+            // Second pass: mark present letters
+            for (let i = 0; i < guess.length; i++) {
+                if (guessLetters[i] !== null) {
+                    const letterIndex = wordLetters.indexOf(guessLetters[i]);
+                    if (letterIndex !== -1) {
+                        result[i] = 'present';
+                        wordLetters[letterIndex] = null; // Mark as used
+                    }
+                }
+            }
+
+            return result;
+        }
+
+        // Animate the row reveal
+        function animateRowReveal(row, result) {
+            result.forEach((state, col) => {
+                setTimeout(() => {
+                    const cellElement = document.getElementById(`cell-${row}-${col}`);
+                    cellElement.classList.add(state);
+                    gameBoard[row][col].state = state;
+                }, col * 100);
+            });
+        }
+
+        // Update keyboard colors based on guesses
+        function updateKeyboard(guess, result) {
+            for (let i = 0; i < guess.length; i++) {
+                const letter = guess[i];
+                const state = result[i];
+                
+                // Only update if this is a better state (correct > present > absent)
+                const currentState = keyboardState[letter];
+                if (!currentState || 
+                    (state === 'correct') || 
+                    (state === 'present' && currentState !== 'correct')) {
+                    keyboardState[letter] = state;
+                    
+                    const keyElement = document.querySelector(`[data-key="${letter}"]`);
+                    if (keyElement) {
+                        keyElement.className = `key ${state}`;
+                    }
+                }
+            }
+        }
+
+        // Show a message to the user
+        function showMessage(text, type = 'info') {
+            const messageElement = document.getElementById('message');
+            messageElement.textContent = text;
+            messageElement.className = `message ${type}`;
+            
+            // Clear message after 3 seconds
+            setTimeout(() => {
+                messageElement.textContent = '';
+                messageElement.className = 'message';
+            }, 3000);
+        }
+
+        // Skip the current word
+        function skipCurrentWord() {
+            if (confirm('Are you sure you want to skip this word? It will count as a loss.')) {
+                showMessage(`The word was: ${currentWord}. Moving to next word...`, "info");
+                stats.totalAttempts += maxAttempts;
+                currentWordIndex++;
+                
+                setTimeout(() => {
+                    loadNextWord();
+                }, 2000);
+                
+                saveStats();
+            }
+        }
+
+        // Initialize the game when the page loads
+        window.addEventListener('load', initGame);
+    </script>
+</body>
+</html>
