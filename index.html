@@ -266,39 +266,7 @@
             cursor: not-allowed;
         }
 
-        .stats {
-            background: rgba(255, 255, 255, 0.9);
-            border-radius: 15px;
-            padding: 20px;
-            margin-top: 20px;
-            text-align: center;
-        }
 
-        .stats h3 {
-            margin-bottom: 15px;
-            color: #4a4a4a;
-        }
-
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
-            gap: 15px;
-        }
-
-        .stat-item {
-            text-align: center;
-        }
-
-        .stat-number {
-            font-size: 2rem;
-            font-weight: bold;
-            color: #667eea;
-        }
-
-        .stat-label {
-            font-size: 0.9rem;
-            color: #666;
-        }
 
         @media (max-width: 600px) {
             .game-container {
@@ -452,27 +420,7 @@
         </div>
     </div>
 
-    <div class="stats">
-        <h3>📊 Game Statistics</h3>
-        <div class="stats-grid">
-            <div class="stat-item">
-                <div class="stat-number" id="wordsCompleted">0</div>
-                <div class="stat-label">Words Completed</div>
-            </div>
-            <div class="stat-item">
-                <div class="stat-number" id="totalAttempts">0</div>
-                <div class="stat-label">Total Attempts</div>
-            </div>
-            <div class="stat-item">
-                <div class="stat-number" id="averageAttempts">0</div>
-                <div class="stat-label">Avg Attempts</div>
-            </div>
-            <div class="stat-item">
-                <div class="stat-number" id="winRate">0%</div>
-                <div class="stat-label">Win Rate</div>
-            </div>
-        </div>
-    </div>
+
 
     <script>
         // Word list in specific order
@@ -490,38 +438,7 @@
         let keyboardState = {};
         let completedWords = [];
         
-        // Statistics
-        let stats = {
-            wordsCompleted: 0,
-            totalAttempts: 0,
-            gamesWon: 0,
-            gamesPlayed: 0
-        };
 
-        // Load stats from localStorage
-        function loadStats() {
-            const savedStats = localStorage.getItem('wordleStats');
-            if (savedStats) {
-                stats = JSON.parse(savedStats);
-                updateStatsDisplay();
-            }
-        }
-
-        // Save stats to localStorage
-        function saveStats() {
-            localStorage.setItem('wordleStats', JSON.stringify(stats));
-            updateStatsDisplay();
-        }
-
-        // Update stats display
-        function updateStatsDisplay() {
-            document.getElementById('wordsCompleted').textContent = stats.wordsCompleted;
-            document.getElementById('totalAttempts').textContent = stats.totalAttempts;
-            document.getElementById('averageAttempts').textContent = 
-                stats.wordsCompleted > 0 ? (stats.totalAttempts / stats.wordsCompleted).toFixed(1) : '0';
-            document.getElementById('winRate').textContent = 
-                stats.gamesPlayed > 0 ? Math.round((stats.gamesWon / stats.gamesPlayed) * 100) + '%' : '0%';
-        }
 
         // Update completed words display
         function updateCompletedWordsDisplay() {
@@ -545,7 +462,6 @@
             }
             
             gameInitialized = true;
-            loadStats();
             
             // Ensure DOM is ready before setting up keyboard
             setTimeout(() => {
@@ -567,15 +483,12 @@
             currentWordIndex = 0;
             loadNextWord();
             resetKeyboardState();
-            stats.gamesPlayed++;
         }
 
         // Load the next word in the sequence
         function loadNextWord() {
             if (currentWordIndex >= currentWordList.length) {
                 showMessage("🎉 Congratulations! You've completed all words!", "success");
-                stats.gamesWon++;
-                saveStats();
                 return;
             }
 
@@ -799,8 +712,6 @@
             if (guess === currentWord) {
                 setTimeout(() => {
                     showMessage("🎉 Correct! Moving to next word...", "success");
-                    stats.wordsCompleted++;
-                    stats.totalAttempts += currentRow + 1;
                     
                     // Add completed word to the list
                     completedWords.push(currentWord.toLowerCase());
@@ -819,11 +730,8 @@
                 if (currentRow >= maxAttempts) {
                     gameOver = true;
                     showMessage(`Game Over! The word was: ${currentWord}`, "error");
-                    stats.totalAttempts += maxAttempts;
                 }
             }
-
-            saveStats();
         }
 
         // Check the guess against the current word
@@ -904,14 +812,11 @@
         function skipCurrentWord() {
             if (confirm('Are you sure you want to skip this word? It will count as a loss.')) {
                 showMessage(`The word was: ${currentWord}. Moving to next word...`, "info");
-                stats.totalAttempts += maxAttempts;
                 currentWordIndex++;
                 
                 setTimeout(() => {
                     loadNextWord();
                 }, 2000);
-                
-                saveStats();
             }
         }
 
